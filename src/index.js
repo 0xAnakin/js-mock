@@ -6,7 +6,7 @@ const fs = require('fs').promises;
 const app = express();
 
 // Method to validate user CLI input
-const isInteger= (str) => {
+const isInteger = (str) => {
 
     if (typeof str !== 'string') {
         return false // we only process strings!  
@@ -38,7 +38,12 @@ const getAllFilePaths = async (dir, files = []) => {
 }
 
 const PORT = isInteger(process.argv[2]) ? process.argv[2] : process.env.PORT || 3000;
-const PUBLIC_DIR = path.join(process.pkg ? process.cwd() : __dirname, '../public');
+const PUBLIC_DIR = process.pkg ? path.join(path.parse(process.argv[0]).dir, 'public') : path.join(__dirname, '../public');
+
+// Define a route handler for the default home page
+app.get('/', (req, res) => {
+    res.send(`JS-Mock server v${pkg.version}`);
+});
 
 // List available APIS
 app.get('/api', async (req, res) => {
@@ -47,15 +52,10 @@ app.get('/api', async (req, res) => {
 
     res.json(apis.map((file) => file.replace(PUBLIC_DIR, `http://localhost:${PORT}/api`).replace(/\\/g, '/')));
 
-})
-
-// Define a route handler for the default home page
-app.get('/', (req, res) => {
-    res.send(`JS-Mock server v${pkg.version}`);
 });
 
 // Serve static files from the "public" directory
-app.use('/api/**', express.static(PUBLIC_DIR));
+app.use('/api', express.static(PUBLIC_DIR, { maxAge: 0 }));
 
 // Start the server
 app.listen(PORT, () => {
