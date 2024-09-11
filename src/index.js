@@ -2,8 +2,17 @@ const pkg = require('../package.json');
 
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 const fs = require('fs').promises;
 const app = express();
+
+// Cors
+app.use(cors());
+
+// Inclusive
+const getRandomNumber = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 // Method to validate user CLI input
 const isInteger = (str) => {
@@ -37,7 +46,7 @@ const getAllFilePaths = async (dir, files = []) => {
 
 }
 
-const PORT = isInteger(process.argv[2]) ? process.argv[2] : process.env.PORT || 3000;
+const PORT = isInteger(process.argv[2]) ? process.argv[2] : process.env.PORT || 3001;
 const PUBLIC_DIR = process.pkg ? path.join(path.parse(process.argv[0]).dir, 'public') : path.join(__dirname, '../public');
 
 // Define a route handler for the default home page
@@ -52,6 +61,11 @@ app.get('/api', async (req, res) => {
 
     res.json(apis.map((file) => file.replace(PUBLIC_DIR, `http://localhost:${PORT}/api`).replace(/\\/g, '/')));
 
+});
+
+// Add latency
+app.use((req, res, next) => {
+    setTimeout(next, getRandomNumber(100, 500));
 });
 
 // Serve static files from the "public" directory
